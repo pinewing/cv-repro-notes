@@ -1,0 +1,78 @@
+{
+  "dataset": "cora",
+  "seeds": 3,
+  "rows": [
+    {
+      "hidden": 8,
+      "dropout": 0.3,
+      "final_mean": 79.87,
+      "final_std": 1.33,
+      "best_mean": 80.4,
+      "best_std": 0.59
+    },
+    {
+      "hidden": 8,
+      "dropout": 0.5,
+      "final_mean": 79.77,
+      "final_std": 0.87,
+      "best_mean": 80.67,
+      "best_std": 0.9
+    },
+    {
+      "hidden": 8,
+      "dropout": 0.7,
+      "final_mean": 78.27,
+      "final_std": 2.07,
+      "best_mean": 79.87,
+      "best_std": 1.49
+    },
+    {
+      "hidden": 16,
+      "dropout": 0.3,
+      "final_mean": 80.47,
+      "final_std": 0.17,
+      "best_mean": 81.83,
+      "best_std": 0.31
+    },
+    {
+      "hidden": 16,
+      "dropout": 0.5,
+      "final_mean": 80.5,
+      "final_std": 0.78,
+      "best_mean": 81.77,
+      "best_std": 0.57
+    },
+    {
+      "hidden": 16,
+      "dropout": 0.7,
+      "final_mean": 80.0,
+      "final_std": 1.56,
+      "best_mean": 81.53,
+      "best_std": 1.13
+    },
+    {
+      "hidden": 32,
+      "dropout": 0.3,
+      "final_mean": 80.5,
+      "final_std": 0.57,
+      "best_mean": 81.73,
+      "best_std": 0.25
+    },
+    {
+      "hidden": 32,
+      "dropout": 0.5,
+      "final_mean": 80.57,
+      "final_std": 0.77,
+      "best_mean": 82.03,
+      "best_std": 0.37
+    },
+    {
+      "hidden": 32,
+      "dropout": 0.7,
+      "final_mean": 80.67,
+      "final_std": 1.03,
+      "best_mean": 82.2,
+      "best_std": 0.71
+    }
+  ]
+}
