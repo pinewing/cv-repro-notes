@@ -1,0 +1,71 @@
+# Python 运行时产物
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# 模型权重与训练产物（不进版本库）
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.engine
+*.h5
+*.pb
+*.bin
+checkpoints/
+weights/
+runs/
+logs/
+outputs/
+wandb/
+lightning_logs/
+
+# 数据集（按需保留目录结构，用 .gitkeep）
+datasets/
+dataset/
+data/
+*.zip
+*.tar
+*.tar.gz
+*.7z
+*.rar
+*.npy
+*.npz
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_tmp
+
+# 编辑器与系统
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 临时文件
+*.tmp
+*.bak
+*.log
