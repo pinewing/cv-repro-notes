@@ -1,0 +1,38 @@
+{
+  "dataset": "cora",
+  "seed": 0,
+  "total": {
+    "gcn": 81.5,
+    "gat": 81.6
+  },
+  "rows": [
+    {
+      "degree": "1-2",
+      "nodes": 400,
+      "gcn": 76.25,
+      "gat": 75.75,
+      "delta": -0.5
+    },
+    {
+      "degree": "3-5",
+      "nodes": 452,
+      "gcn": 86.28,
+      "gat": 86.06,
+      "delta": -0.22
+    },
+    {
+      "degree": "6-10",
+      "nodes": 119,
+      "gcn": 78.99,
+      "gat": 80.67,
+      "delta": 1.68
+    },
+    {
+      "degree": "11-+",
+      "nodes": 29,
+      "gcn": 89.66,
+      "gat": 96.55,
+      "delta": 6.9
+    }
+  ]
+}

@@ -80,8 +80,8 @@ def load_data(data_dir, dataset='cora'):
     labels[test_idx_reorder, :] = labels[test_idx_range, :]
 
     num_nodes = features.shape[0]
-    adj = build_adjacency(graph, num_nodes)
-    adj = normalize_adjacency(adj + sp.eye(num_nodes, dtype=np.float32))
+    adj_raw = build_adjacency(graph, num_nodes)
+    adj = normalize_adjacency(adj_raw + sp.eye(num_nodes, dtype=np.float32))
 
     idx_train = np.arange(len(y))
     idx_val = np.arange(len(y), len(y) + 500)
@@ -96,6 +96,7 @@ def load_data(data_dir, dataset='cora'):
     return {
         'features': features,
         'adj': adj,
+        'adj_raw': adj_raw,
         'labels': labels.astype(np.float32),
         'masks': masks,
         'num_nodes': num_nodes,

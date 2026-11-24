@@ -34,6 +34,12 @@ python run_seeds.py --dataset cora --seeds 10
 # 对照实验：去掉图结构的 MLP 基线
 python baseline_mlp.py --dataset cora --seed 123
 
+# GAT 对照实现（8 头 × 8 维，dropout 0.6，lr 0.005）
+python gat.py --dataset cora --seeds 10
+
+# 按节点度数分桶比较 GCN / GAT
+python analyze_degree.py --dataset cora --seed 0
+
 # 其他数据集
 python train.py --dataset citeseer --seed 123
 python train.py --dataset pubmed --seed 123
@@ -73,6 +79,20 @@ python train.py --dataset pubmed --seed 123
 | 32 | 81.73 ± 0.25 | 82.03 ± 0.37 | 82.20 ± 0.71 |
 
 结论：隐藏维从 8 提到 16 收益最明显，继续加到 32 只多 0.2–0.4 个点；dropout 0.7 在小隐藏维上明显掉点，在本就稀疏的特征上属于过正则。
+
+## GCN vs GAT 对比
+
+GAT 为手写实现（不依赖 PyG），论文设置 8 头 × 8 维、dropout 0.6、lr 0.005、L2 5e-4：
+
+| 数据集 | GCN（验证最优） | GAT（验证最优） | 论文 GCN / GAT |
+| --- | --- | --- | --- |
+| Cora | 81.53 ± 0.70（10 种子） | 82.00 ± 0.49（10 种子） | 81.5 / 83.0 |
+| Citeseer | 71.5（单种子） | 69.97 ± 0.61（3 种子） | 70.3 / 72.5 |
+| Pubmed | 78.64 ± 0.72（5 种子） | 78.77 ± 0.33（3 种子） | 79.0 / 79.0 |
+
+度数分桶（Cora，seed 0）：GAT 在 6–10 度节点高 1.7 个点、11+ 度节点高 6.9 个点，但在 1–5 度节点反而低 0.2–0.5 个点。注意力只在邻居足够多、需要区分重要性时才起作用。
+
+完整分析见 `../对比报告_GCN_vs_GAT.md`。
 
 
 ## 合规说明

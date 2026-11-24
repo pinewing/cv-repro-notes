@@ -1,0 +1,54 @@
+{
+  "model": "gat",
+  "dataset": "citeseer",
+  "seeds": 3,
+  "final_mean": 69.93,
+  "final_std": 0.61,
+  "best_val_mean": 69.97,
+  "best_val_std": 0.61,
+  "paper_test_acc": 72.5,
+  "rows": [
+    {
+      "model": "gat",
+      "dataset": "citeseer",
+      "seed": 0,
+      "heads": 8,
+      "hidden": 8,
+      "dropout": 0.6,
+      "lr": 0.005,
+      "epochs_run": 200,
+      "test_acc_final": 69.9,
+      "test_acc_best_val": 70.0,
+      "paper_test_acc": 72.5,
+      "seconds": 29.0
+    },
+    {
+      "model": "gat",
+      "dataset": "citeseer",
+      "seed": 1,
+      "heads": 8,
+      "hidden": 8,
+      "dropout": 0.6,
+      "lr": 0.005,
+      "epochs_run": 200,
+      "test_acc_final": 69.2,
+      "test_acc_best_val": 69.2,
+      "paper_test_acc": 72.5,
+      "seconds": 29.8
+    },
+    {
+      "model": "gat",
+      "dataset": "citeseer",
+      "seed": 2,
+      "heads": 8,
+      "hidden": 8,
+      "dropout": 0.6,
+      "lr": 0.005,
+      "epochs_run": 200,
+      "test_acc_final": 70.7,
+      "test_acc_best_val": 70.7,
+      "paper_test_acc": 72.5,
+      "seconds": 29.5
+    }
+  ]
+}
