@@ -84,12 +84,14 @@ class GATLayer(nn.Module):
 
 
 class GAT(nn.Module):
-    def __init__(self, num_features, hidden_dim, num_classes, heads=8, dropout=0.6, residual=False):
+    def __init__(self, num_features, hidden_dim, num_classes, heads=8, dropout=0.6, residual=False, out_heads=None):
         super().__init__()
         self.dropout = dropout
         self.residual = residual
+        oh = out_heads if out_heads else heads
         self.gat1 = GATLayer(num_features, hidden_dim, heads=heads, dropout=dropout, concat=True)
-        self.gat2 = GATLayer(hidden_dim * heads, num_classes, heads=heads, dropout=dropout, concat=False)
+        # 官方实现第二层为单头（n_heads=[8,1]），out_heads=1 即可对齐
+        self.gat2 = GATLayer(hidden_dim * heads, num_classes, heads=oh, dropout=dropout, concat=False)
         # 残差：第二层输出的维度是类别数，无法与输入直接相加，用一条无图结构的线性投影做跳连
         self.skip = nn.Linear(hidden_dim * heads, num_classes, bias=False) if residual else None
 
@@ -110,6 +112,7 @@ def build_args(argv=None):
     p.add_argument('--lr', type=float, default=0.005)
     p.add_argument('--hidden', type=int, default=8)
     p.add_argument('--heads', type=int, default=8)
+    p.add_argument('--out-heads', type=int, default=0, help='第二层头数；0 表示与 --heads 相同，1 对齐官方 n_heads=[8,1]')
     p.add_argument('--dropout', type=float, default=0.6)
     p.add_argument('--weight-decay', type=float, default=5e-4)
     p.add_argument('--edge-dropout', type=float, default=0.0, help='训练时随机丢弃边的比例（自环保留）')
@@ -131,7 +134,7 @@ def train_once(args, verbose=True, return_model=False):
     edges = build_edges(data['adj_raw'], data['num_nodes'])
 
     model = GAT(data['num_features'], args.hidden, data['num_classes'], args.heads, args.dropout,
-                residual=args.residual)
+                residual=args.residual, out_heads=args.out_heads)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     val_losses = []
@@ -189,6 +192,7 @@ def train_once(args, verbose=True, return_model=False):
         'lr': args.lr, 'epochs_run': len(val_losses),
         'edge_dropout': args.edge_dropout,
         'residual': bool(args.residual),
+        'out_heads': args.out_heads or args.heads,
         'history': history,
         'test_acc_final': round(test_final * 100, 2),
         'test_acc_best_val': round(test_best * 100, 2),
@@ -215,7 +219,8 @@ def main():
                 '--weight-decay', str(args.weight_decay),
                 '--edge-dropout', str(args.edge_dropout),
                 '--patience', str(args.patience),
-            ] + (['--residual'] if args.residual else []))
+            ] + (['--residual'] if args.residual else [])
+              + (['--out-heads', str(args.out_heads)] if args.out_heads else []))
             rows.append(train_once(sub, verbose=False))
         finals = [r['test_acc_final'] for r in rows]
         bests = [r['test_acc_best_val'] for r in rows]
