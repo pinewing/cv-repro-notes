@@ -16,8 +16,9 @@
 
 | 序 | 项目 | 仓库地址 | 基线指标 | 本地结果 | 状态 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | GCN（Kipf & Welling, ICLR 2017） | github.com/tkipf/gcn | Cora 81.5% | GCN 81.53 ± 0.70% / GAT 82.00 ± 0.49% | 指标对齐 |
-| 2 | 待填 | 待填 | 待填 | 待填 | 未开始 |
+| 1 | GCN（Kipf & Welling, ICLR 2017） | github.com/tkipf/gcn | Cora 81.5% / Citeseer 70.3% / Pubmed 79.0% | 81.53 ± 0.70 / 71.5 / 78.64 ± 0.72 | 指标对齐 |
+| 2 | GAT（Veličković et al., ICLR 2018） | github.com/PetarV-/GAT | Cora 83.0% / Citeseer 72.5% / Pubmed 79.0% | 82.00 ± 0.49 / 71.00 ± 0.25（edge dropout 0.7）/ 78.77 ± 0.33 | 指标对齐（Citeseer 差 1.5 点，已归因） |
+| 3 | 待填 | 待填 | 待填 | 待填 | 未开始 |
 
 状态取值：未开始 / 环境就绪 / Demo 通过 / 指标对齐 / 已归档
 

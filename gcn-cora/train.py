@@ -55,6 +55,7 @@ def train_once(args, verbose=True):
 
     val_losses = []
     best_state, best_val_loss = None, float('inf')
+    history = []
     t0 = time.time()
 
     for epoch in range(1, args.epochs + 1):
@@ -76,6 +77,8 @@ def train_once(args, verbose=True):
             val_loss = masked_cross_entropy(val_logits, labels, masks['val']).item()
             train_acc = masked_accuracy(val_logits, labels, masks['train'])
         val_losses.append(val_loss)
+        history.append({'epoch': epoch, 'loss': round(loss.item(), 4), 'val_loss': round(val_loss, 4),
+                        'train_acc': round(train_acc, 4)})
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
@@ -116,6 +119,7 @@ def train_once(args, verbose=True):
         'dropout': args.dropout,
         'lr': args.lr,
         'weight_decay': args.weight_decay,
+        'history': history,
         'seconds': round(time.time() - t0, 2),
     }
     if verbose:

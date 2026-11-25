@@ -84,16 +84,22 @@ class GATLayer(nn.Module):
 
 
 class GAT(nn.Module):
-    def __init__(self, num_features, hidden_dim, num_classes, heads=8, dropout=0.6):
+    def __init__(self, num_features, hidden_dim, num_classes, heads=8, dropout=0.6, residual=False):
         super().__init__()
         self.dropout = dropout
+        self.residual = residual
         self.gat1 = GATLayer(num_features, hidden_dim, heads=heads, dropout=dropout, concat=True)
         self.gat2 = GATLayer(hidden_dim * heads, num_classes, heads=heads, dropout=dropout, concat=False)
+        # 残差：第二层输出的维度是类别数，无法与输入直接相加，用一条无图结构的线性投影做跳连
+        self.skip = nn.Linear(hidden_dim * heads, num_classes, bias=False) if residual else None
 
     def forward(self, x, edges):
         x = F.dropout(x, self.dropout, training=self.training)
-        x = F.elu(self.gat1(x, edges))
-        return self.gat2(x, edges)
+        h = F.elu(self.gat1(x, edges))
+        out = self.gat2(h, edges)
+        if self.residual:
+            out = out + self.skip(h)
+        return out
 
 
 def build_args(argv=None):
@@ -106,6 +112,8 @@ def build_args(argv=None):
     p.add_argument('--heads', type=int, default=8)
     p.add_argument('--dropout', type=float, default=0.6)
     p.add_argument('--weight-decay', type=float, default=5e-4)
+    p.add_argument('--edge-dropout', type=float, default=0.0, help='训练时随机丢弃边的比例（自环保留）')
+    p.add_argument('--residual', action='store_true', help='第二层加一条线性跳连（非论文结构，用于消融）')
     p.add_argument('--patience', type=int, default=100)
     p.add_argument('--seed', type=int, default=123)
     p.add_argument('--seeds', type=int, default=0, help='>0 时跑多种子并输出均值方差')
@@ -114,7 +122,7 @@ def build_args(argv=None):
     return p.parse_args(argv)
 
 
-def train_once(args, verbose=True):
+def train_once(args, verbose=True, return_model=False):
     set_seed(args.seed)
     data = load_data(args.data_dir, args.dataset)
     feats = torch.from_numpy(data['features'].toarray()).float()
@@ -122,17 +130,25 @@ def train_once(args, verbose=True):
     masks = {k: torch.from_numpy(v) for k, v in data['masks'].items()}
     edges = build_edges(data['adj_raw'], data['num_nodes'])
 
-    model = GAT(data['num_features'], args.hidden, data['num_classes'], args.heads, args.dropout)
+    model = GAT(data['num_features'], args.hidden, data['num_classes'], args.heads, args.dropout,
+                residual=args.residual)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     val_losses = []
     best_state, best_val = None, float('inf')
+    history = []
     t0 = time.time()
 
     for epoch in range(1, args.epochs + 1):
         model.train()
         optimizer.zero_grad()
-        loss = masked_cross_entropy(model(feats, edges), labels, masks['train'])
+        if args.edge_dropout > 0:
+            src, dst = edges[0], edges[1]
+            keep = (torch.rand(edges.size(1)) > args.edge_dropout) | (src == dst)
+            train_edges = edges[:, keep]
+        else:
+            train_edges = edges
+        loss = masked_cross_entropy(model(feats, train_edges), labels, masks['train'])
         loss.backward()
         optimizer.step()
 
@@ -140,6 +156,10 @@ def train_once(args, verbose=True):
         with torch.no_grad():
             val_loss = masked_cross_entropy(model(feats, edges), labels, masks['val']).item()
         val_losses.append(val_loss)
+        with torch.no_grad():
+            train_acc = masked_accuracy(model(feats, edges), labels, masks['train'])
+        history.append({'epoch': epoch, 'loss': round(loss.item(), 4),
+                        'val_loss': round(val_loss, 4), 'train_acc': round(train_acc, 4)})
         if val_loss < best_val:
             best_val = val_loss
             best_state = {k: v.clone() for k, v in model.state_dict().items()}
@@ -167,6 +187,9 @@ def train_once(args, verbose=True):
         'model': 'gat', 'dataset': args.dataset, 'seed': args.seed,
         'heads': args.heads, 'hidden': args.hidden, 'dropout': args.dropout,
         'lr': args.lr, 'epochs_run': len(val_losses),
+        'edge_dropout': args.edge_dropout,
+        'residual': bool(args.residual),
+        'history': history,
         'test_acc_final': round(test_final * 100, 2),
         'test_acc_best_val': round(test_best * 100, 2),
         'paper_test_acc': PAPER_GAT.get(args.dataset),
@@ -174,6 +197,8 @@ def train_once(args, verbose=True):
     }
     if verbose:
         print(json.dumps(result, ensure_ascii=False, indent=2))
+    if return_model:
+        return result, model, feats, edges, data
     return result
 
 
@@ -182,7 +207,15 @@ def main():
     if args.seeds > 0:
         rows = []
         for i in range(args.seeds):
-            sub = build_args(['--dataset', args.dataset, '--seed', str(i), '--log-every', '200'])
+            sub = build_args([
+                '--dataset', args.dataset, '--seed', str(i), '--log-every', '400',
+                '--epochs', str(args.epochs), '--lr', str(args.lr),
+                '--hidden', str(args.hidden), '--heads', str(args.heads),
+                '--dropout', str(args.dropout),
+                '--weight-decay', str(args.weight_decay),
+                '--edge-dropout', str(args.edge_dropout),
+                '--patience', str(args.patience),
+            ] + (['--residual'] if args.residual else []))
             rows.append(train_once(sub, verbose=False))
         finals = [r['test_acc_final'] for r in rows]
         bests = [r['test_acc_best_val'] for r in rows]
@@ -192,7 +225,8 @@ def main():
             'best_val_mean': round(statistics.mean(bests), 2), 'best_val_std': round(statistics.pstdev(bests), 2),
             'paper_test_acc': PAPER_GAT.get(args.dataset), 'rows': rows,
         }
-        out = 'results/gat_{}.json'.format(args.dataset)
+        out = args.save_json or 'results/gat_{}.json'.format(args.dataset)
+        os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
         os.makedirs('results', exist_ok=True)
         with open(out, 'w', encoding='utf-8') as f:
             json.dump(summary, f, ensure_ascii=False, indent=2)

@@ -1,0 +1,19 @@
+{
+  "dataset": "cora",
+  "seed": 123,
+  "gcn_test": 81.7,
+  "gat_test": 82.8,
+  "gcn_epochs": 144,
+  "gat_epochs": 200,
+  "attention_nodes": {
+    "high_degree_node": 1986,
+    "high_degree": 65,
+    "top_neighbors": [
+      2,
+      1993,
+      968,
+      2001,
+      151
+    ]
+  }
+}

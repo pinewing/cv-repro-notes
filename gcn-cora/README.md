@@ -37,8 +37,14 @@ python baseline_mlp.py --dataset cora --seed 123
 # GAT 对照实现（8 头 × 8 维，dropout 0.6，lr 0.005）
 python gat.py --dataset cora --seeds 10
 
+# GAT + edge dropout（Citeseer 上最优，10 种子）
+python gat.py --dataset citeseer --seeds 10 --edge-dropout 0.7
+
 # 按节点度数分桶比较 GCN / GAT
 python analyze_degree.py --dataset cora --seed 0
+
+# 生成三张图：训练曲线、注意力热力图、度数分层柱状图
+python visualize.py --dataset cora --seed 123
 
 # 其他数据集
 python train.py --dataset citeseer --seed 123
@@ -90,7 +96,15 @@ GAT 为手写实现（不依赖 PyG），论文设置 8 头 × 8 维、dropout 0
 | Citeseer | 71.5（单种子） | 69.97 ± 0.61（3 种子） | 70.3 / 72.5 |
 | Pubmed | 78.64 ± 0.72（5 种子） | 78.77 ± 0.33（3 种子） | 79.0 / 79.0 |
 
+Citeseer 上 GAT 加 edge dropout 0.7 后从 69.97 提到 **71.00 ± 0.25（10 种子）**；同样试过的残差跳连会让 Citeseer 掉到 69.03，已回滚，属无效改动。
+
 度数分桶（Cora，seed 0）：GAT 在 6–10 度节点高 1.7 个点、11+ 度节点高 6.9 个点，但在 1–5 度节点反而低 0.2–0.5 个点。注意力只在邻居足够多、需要区分重要性时才起作用。
+
+可视化（`python visualize.py`，图在 `figures/`）：
+
+- `figures/training_curves_cora.png`：GCN 第 142 轮早停、GAT 跑满 200 轮，训练精度都逼近 100%，GAT 验证损失在 1.1 附近走平
+- `figures/attention_heatmap_cora.png`：高度数节点（度 65）上逐邻居的注意力倍数，以及每个头对"自环 / 低度 / 中度 / 高度"邻居的平均偏好（11+ 度邻居约 7–8 倍于均匀基线）
+- `figures/degree_buckets_cora.png`：按度数分层的精度柱状图
 
 完整分析见 `../对比报告_GCN_vs_GAT.md`。
 
